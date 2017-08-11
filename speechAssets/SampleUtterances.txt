@@ -1,16 +1,19 @@
+searchAgain search again
 searchIntent get me stuff happening {date}
 searchIntent get me events for {date}
 searchIntent whats on {date}
-searchIntent {date}
-searchIntent for {date}
 searchIntent whats happening {date}
 searchIntent tell me whats happening {date}
 searchIntent what is happening {date}
 searchIntent what is happening on {date}
 searchIntent what events are happening {date}
 searchIntent what events are happening on {date}
-
+searchIntent is there an event {date}
+searchIntent are there any events scheduled {date}
+searchIntent what events are scheduled {date}
+searchIntent what are the events {date}
 eventIntent tell me about event {number}
 eventIntent whats event {number}
-eventIntent number {number}
 eventIntent {number}
+eventIntent tell me the details for the {number} event
+eventIntent what about the {number} event
