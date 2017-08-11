@@ -11,13 +11,13 @@ var states = {
 var alexa;
 
 //OPTIONAL: replace with "amzn1.ask.skill.[your-unique-value-here]";
-var APP_ID = undefined; 
+var APP_ID = "amzn1.ask.skill.1bb0e8db-942e-41f6-8ce1-3aeb7bdbd523"; 
 
 // URL to get the .ics from, in this instance we are getting from Stanford however this can be changed
-var URL = "http://events.stanford.edu/eventlist.ics";
+var URL = "https://www.meetup.com/louisvilleatheists/events/ical/620476/217614f9f5861089dd6df2cdf53b837694e7e304/Louisville+Atheists+and+Freethinkers/";
 
 // Skills name 
-var skillName = "Events calendar:";
+var skillName = "Louisville Atheists and Freethinkers event calendar:";
 
 // Message when the skill is first called
 var welcomeMessage = "You can ask for the events today. Search for events by date. or say help. What would you like? ";
@@ -45,10 +45,10 @@ var scheduledEventMessage = "scheduled for this time frame. I've sent the detail
 var firstThreeMessage = "Here are the first %d. ";
 
 // the values within the {} are swapped out for variables
-var eventSummary = "The %s event is, %s at %s on %s ";
+var eventSummary = "The %s event is %s ";
 
 // Only used for the card on the companion app
-var cardContentSummary = "%s at %s on %s ";
+var cardContentSummary = "%s on %s ";
 
 // More info text
 var haveEventsRepromt = "Give me an event number to hear more information.";
@@ -63,9 +63,12 @@ var eventOutOfRange = "Event number is out of range please choose another event"
 var descriptionMessage = "Here's the description ";
 
 // Used when an event is asked for
-var killSkillMessage = "Ok, great, see you next time.";
+var killSkillMessage = "Goodbye for now.";
 
-var eventNumberMoreInfoText = "You can say the event number for more information.";
+var eventNumberMoreInfoText = "You can say 'first event' or 'second event' for the event description, or say search again to search another date";
+
+//added by TechieWoman
+var meetupInfo = "For venue details and to R S V P, visit Louisville Atheists and Freethinkers at Meetup.com.";
 
 // used for title on companion app
 var cardTitle = "Events";
@@ -160,23 +163,26 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
 
                             if (relevantEvents[0] != null) {
                                 var date = new Date(relevantEvents[0].start);
-                                output += utils.format(eventSummary, "First", removeTags(relevantEvents[0].summary), relevantEvents[0].location, date.toDateString() + ".");
+                                output += utils.format(eventSummary, "First", removeTags(relevantEvents[0].summary), date.toDateString() + ".");
                             }
                             if (relevantEvents[1]) {
                                 var date = new Date(relevantEvents[1].start);
-                                output += utils.format(eventSummary, "Second", removeTags(relevantEvents[1].summary), relevantEvents[1].location, date.toDateString() + ".");
+                                output += utils.format(eventSummary, "Second", removeTags(relevantEvents[1].summary), date.toDateString() + ".");
                             }
                             if (relevantEvents[2]) {
                                 var date = new Date(relevantEvents[2].start);
-                                output += utils.format(eventSummary, "Third", removeTags(relevantEvents[2].summary), relevantEvents[2].location, date.toDateString() + ".");
+                                output += utils.format(eventSummary, "Third", removeTags(relevantEvents[2].summary), date.toDateString() + ".");
                             }
 
                             for (var i = 0; i < relevantEvents.length; i++) {
                                 var date = new Date(relevantEvents[i].start);
-                                cardContent += utils.format(cardContentSummary, removeTags(relevantEvents[i].summary), removeTags(relevantEvents[i].location), date.toDateString()+ "\n\n");
+                                cardContent += utils.format(cardContentSummary, removeTags(relevantEvents[i].summary), date.toDateString()+ "\n\n");
                             }
-
+                            
+                            //I added this line --Mikel
+                            output += meetupInfo + "\n\n";
                             output += eventNumberMoreInfoText;
+                            
                             alexa.emit(':askWithCard', output, haveEventsRepromt, cardTitle, cardContent);
                         } else {
                             output = NoDataMessage;
@@ -186,10 +192,12 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
                     else {
                         output = NoDataMessage;
                         alexa.emit(':ask', output, output);
+                        //asks 'would you like to check another date?'
                     }
                 } else {
                     output = NoDataMessage;
                     alexa.emit(':ask', output, output);
+                 
                 }
             });
         }
@@ -224,8 +232,9 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
 var descriptionHandlers = Alexa.CreateStateHandler(states.DESCRIPTION, {
     'eventIntent': function () {
 
-        var repromt = " Would you like to hear another event?";
+        var repromt = " Would you like to hear another event? For example you can say 'first event' or 'second event'";
         var slotValue = this.event.request.intent.slots.number.value;
+        
 
         // parse slot value
         var index = parseInt(slotValue) - 1;
@@ -256,18 +265,29 @@ var descriptionHandlers = Alexa.CreateStateHandler(states.DESCRIPTION, {
     },
 
     'AMAZON.NoIntent': function () {
-        this.emit(':tell', shutdownMessage);
+        //CHANGE THIS TO REPROMPT FOR A NEW SEARCH
+    	this.handler.state = states.SEARCHMODE; //added by mikel
+    	alexa.emit(':ask', 'would you like to search for events on another date?', 'would you like to search for events on another date?')
+    	//this.emit(':tell', shutdownMessage);
     },
 
     'AMAZON.YesIntent': function () {
-        output = welcomeMessage;
+        //output = welcomeMessage;
         alexa.emit(':ask', eventNumberMoreInfoText, eventNumberMoreInfoText);
+        //alexa.emit(':ask', output, output);
+       
     },
 
     'SessionEndedRequest': function () {
         this.emit('AMAZON.StopIntent');
     },
-
+    
+    'searchAgain': function () {
+    	this.handler.state = states.SEARCHMODE; //added by mikel
+    	alexa.emit(':ask', 'what date or date range would you like to search?', 'what date or date range would you like to search?')
+    },
+    
+    
     'Unhandled': function () {
         this.emit(':ask', HelpMessage, HelpMessage);
     }
